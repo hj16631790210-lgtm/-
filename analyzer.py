@@ -75,7 +75,7 @@ def _looks_like_captcha(html: str) -> bool:
         or "enter the characters" in lower
         or "automated access" in lower
         or "/errors/validatecaptcha" in lower
-        or "captcha" in lower and "amazon" in lower
+        or ("captcha" in lower and "amazon" in lower)
     )
 
 
@@ -97,7 +97,8 @@ def get_amazon_seller_info(asin: str, cfg: AnalyzerConfig) -> Tuple[str, str]:
             if _looks_like_captcha(resp.text):
                 return "Captcha Blocked", "Captcha Blocked"
 
-            soup = BeautifulSoup(resp.text, "lxml")
+            # 关键：不要用 lxml，避免 Streamlit Cloud 构建/运行卡死
+            soup = BeautifulSoup(resp.text, "html.parser")
 
             brand_element = soup.find("a", id="bylineInfo") or soup.find("span", class_="po-brand")
             brand = brand_element.get_text(strip=True) if brand_element else "Brand Not Found"
